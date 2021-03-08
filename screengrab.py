@@ -59,9 +59,9 @@ def main():
     print("Running Main")
     last_time = time.time()
     while True:
-        #print("running")
-        #screen =  np.array(ImageGrab.grab(bbox=(0,50,1200,750)))
-        screen = grab_screen((0,50,1200,750))
+        #print("running")                        x1 y1 x2 y2
+        #screen =  np.array(ImageGrab.grab(bbox=(225, 150, 1125, 600)))
+        screen = grab_screen((225, 150, 1125, 600))
         print('Frame took {} seconds'.format(time.time()-last_time))
         last_time = time.time()
         new_screen = process_img(screen)
