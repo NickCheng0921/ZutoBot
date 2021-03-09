@@ -13,32 +13,39 @@ from PIL import ImageGrab
 import cv2
 import time
 
+from random import randint
 from grabScreenFast import grab_screen
-
+from findCharacters import recalibrateCharacters
 #get frames
 def process_img(image):
     # convert to gray
+    #processed_img = image
     processed_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # edge detection of images
     # threshold 1 is high threshold value of intensity gradient
     # threshold2 is low threshold value of intensity gradient
     # takes argument for aperture size for intensity gradient
-    processed_img =  cv2.Canny(processed_img, threshold1 = 50, threshold2=100)
+    processed_img =  cv2.Canny(processed_img, threshold1 = 100, threshold2= 200)
     #hough lines can detect shape even through some distortions
     #make hough lines detect lines of stages
     # args: input binary image, rho accuracy (distance), radian (step), threshold vote to be line
     # extra args for HoughLinesP: min line length, max gap between line segments
     # step with np.pi/2 for 90 degree steps
     # step with np.pi for 180 degree steps or vertical lines only
-    lines = []
-    lines = cv2.HoughLinesP(processed_img, 1, np.pi/2, 200, 40, 10)
-     #draw_lines(processed_img, lines, 3)
-    
-    #x, contours = cv2.findContours(processed_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    
+    #lines = []
+    #lines = cv2.HoughLinesP(processed_img, 1, np.pi/2, 200, 40, 10)
+    #draw_lines(processed_img, lines, 3)
+ 
     #can't draw colored lines onto a binarized image
     colored_img = cv2.cvtColor(processed_img, cv2.COLOR_GRAY2BGR)
-    draw_red_lines(colored_img, lines, 2)
+
+    #list of tuples
+    characterList = recalibrateCharacters(processed_img)
+    for character in characterList:
+        print(character[0], character[1])
+        cv2.ellipse(colored_img, (character), (16,22), 0, 0, 360, (255, 0, 0), -1)
+    
+    #draw_red_lines(colored_img, lines, 2)
     cv2.imshow('window', colored_img)
 
     return processed_img
@@ -59,7 +66,7 @@ def main():
     print("Running Main")
     last_time = time.time()
     while True:
-        #print("running")                        x1 y1 x2 y2
+        #print("running")                         x1   y1   x2    y2
         #screen =  np.array(ImageGrab.grab(bbox=(225, 150, 1125, 600)))
         screen = grab_screen((225, 150, 1125, 600))
         print('Frame took {} seconds'.format(time.time()-last_time))
