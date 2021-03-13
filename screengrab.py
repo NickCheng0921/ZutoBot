@@ -3,17 +3,14 @@
 Created on Thu Mar  4 21:24:28 2021
 
 @author: NuckChead
-* set up screen grab for python
-* switch to C++ pillow equivalent if this gets slow
 * https://pythonprogramming.net/open-cv-basics-python-plays-gta-v/?completed=/game-frames-open-cv-python-plays-gta-v/
 """
 
-import numpy as np
-from PIL import ImageGrab
+#import numpy as np
+#from PIL import ImageGrab #article details a faster way to do imagegrab
 import cv2
 import time
 
-from random import randint
 from grabScreenFast import grab_screen
 from findCharacters import recalibrateCharacters
 #get frames
@@ -37,18 +34,18 @@ def process_img(image):
     #draw_lines(processed_img, lines, 3)
  
     #can't draw colored lines onto a binarized image
-    colored_img = cv2.cvtColor(processed_img, cv2.COLOR_GRAY2BGR)
+    #colored_img = cv2.cvtColor(processed_img, cv2.COLOR_GRAY2BGR)
+    colored_img = image
 
-    #list of tuples
-    characterList = recalibrateCharacters(processed_img)
+    #list of tuples of type (x, y, B, G, R)
+    characterList = recalibrateCharacters(processed_img, colored_img)
+    #draw ellipses onto characters
     for character in characterList:
-        print(character[0], character[1])
-        cv2.ellipse(colored_img, (character), (16,22), 0, 0, 360, (255, 0, 0), -1)
-    
-    #draw_red_lines(colored_img, lines, 2)
-    cv2.imshow('window', colored_img)
+        colorSet = (character[2], character[3], character[4])
+        print(colorSet[0], colorSet[1], colorSet[2])
+        cv2.ellipse(colored_img, (character[0], character[1]), (16,22), 0, 0, 360, colorSet, -1)
 
-    return processed_img
+    return colored_img
 
 def draw_lines(img, lines, thickness):
     #draw thicker lines over where we find lines
@@ -62,19 +59,29 @@ def draw_red_lines(img, lines, thiccy):
         coords = line[0]
         cv2.line(img, (coords[0], coords[1]), (coords[2], coords[3]), (0, 0, 255), thiccy)
 
+def cycles_per_second(timeList):
+    res = 0.0
+    for i in timeList:
+        res += 1.0/i
+    res /= len(timeList)
+    return res
+
 def main():
     print("Running Main")
     last_time = time.time()
+    timeList = [] #list to hold timing for calculation done each frame
     while True:
         #print("running")                         x1   y1   x2    y2
         #screen =  np.array(ImageGrab.grab(bbox=(225, 150, 1125, 600)))
         screen = grab_screen((225, 150, 1125, 600))
+        timeList.append(time.time() - last_time)
         print('Frame took {} seconds'.format(time.time()-last_time))
         last_time = time.time()
+        
         new_screen = process_img(screen)
-        #cv2.imshow('window', new_screen)
-        #cv2.imshow('window',cv2.cvtColor(screen, cv2.COLOR_BGR2RGB))
+        cv2.imshow('window', new_screen)
         if cv2.waitKey(25) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
+            print("CPS: ", cycles_per_second(timeList))
             break
 main()
